@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat App</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+      #chat-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+      }
+      #messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+        border: 1px solid #ccc;
+        margin-bottom: 10px;
+        background-color: #f9f9f9;
+      }
+      #messages div {
+        margin-bottom: 5px;
+        word-wrap: break-word;
+      }
+      #form {
+        display: flex;
+        gap: 10px;
+      }
+      #form input,
+      #form button {
+        padding: 10px;
+        font-size: 16px;
+        flex: 1;
+      }
+      #form button {
+        flex: 0 0 auto;
+      }
+      #join-room {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      #join-room input,
+      #join-room button {
+        padding: 10px;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+<body>
+  <h1>Chat Room</h1>
+  <div id="chat-container">
+    <div id="join-room">
+
+      <input type="text" id="userName" placeholder="Your Name" required />
+      <button id="joinButton">Join Room</button>
+    </div>
+    <div id="messages" style="display: none"></div>
+    <div id="form" style="display: none">
+      <input type="text" id="messageInput" placeholder="Type a message" />
+      <button id="sendButton">Send</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.5.3/socket.io.min.js"></script>
+  <script>
+    const socket = io('http://localhost:2222'); // Update with your server URL
+    socket.on('connected', ({ clientId, roomId }) => {
+        console.log(`Connected as ${clientId}, default room: ${roomId}`);
+    
+        // Store the roomId in localStorage
+        localStorage.setItem('roomId', roomId);
+        // Optionally, auto-join the room
+        //socket.emit('joinRoom', { roomId });
+    });
+    // Check if roomId is stored in localStorage on page load
+    const storedRoomId = localStorage.getItem('roomId');
+    const roomIdInput = document.getElementById('roomId');
+    const userNameInput = document.getElementById('userName');
+    const joinButton = document.getElementById('joinButton');
+    const messagesDiv = document.getElementById('messages');
+    const formDiv = document.getElementById('form');
+    
+    
+    let roomId=storedRoomId;
+    console.log('Stored roomId in localStorage:', roomId);
+    // Join a room
+    joinButton.addEventListener('click', () => {
+        const userName = userNameInput.value.trim();
+        
+        if (!userName) {
+            alert('Username is required!');
+            return;
+        }
+        
+        if (!storedRoomId) {
+            roomId = roomIdInput.value.trim();
+            if (!roomId) {
+                alert('Room ID is required!');
+                return;
+            }
+            
+            // Store roomId in localStorage
+            localStorage.setItem('roomId', roomId);
+        }
+        
+        socket.emit('joinRoom', { roomId, userName });
+        console.log('Stored roomId in localStorage:', localStorage);
+
+      // Show chat UI
+      document.getElementById('join-room').style.display = 'none';
+      messagesDiv.style.display = 'block';
+      formDiv.style.display = 'flex';
+
+      addMessage(`You joined the room: ${roomId}`);
+    });
+
+    // Send a message
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    sendButton.addEventListener('click', () => {
+      const message = messageInput.value.trim();
+      if (message) {
+        socket.emit('sendMessage', { roomId, message });
+        addMessage(`You: ${message}`);
+        messageInput.value = '';
+      } else {
+        alert('Please type a message before sending.');
+      }
+    });
+
+    // Listen for messages
+    socket.on('receiveMessage', ({ userName, content }) => {
+      addMessage(`Backend: ${content}`);
+    });
+
+    // Listen for audio messages
+    socket.on('audioMessage', (audioBase64) => {
+      const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
+      const div = document.createElement('div');
+
+      // Add play/pause button
+      const playPauseButton = document.createElement('button');
+      audio.play();
+      playPauseButton.textContent = 'Pause';
+      playPauseButton.addEventListener('click', () => {
+        if (audio.paused) {
+          audio.play();
+          playPauseButton.textContent = 'Pause';
+        } else {
+          audio.pause();
+          playPauseButton.textContent = 'Play';
+        }
+      });
+
+      div.appendChild(playPauseButton);
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll
+    });
+
+    // Listen for users joining
+    socket.on('userJoined', ({ userName }) => {
+      addMessage(`${userName} joined room`);
+    }); 
+
+
+    // Handle disconnect event
+    socket.on('disconnect', () => {
+      console.log('Disconnected from the server');
+      localStorage.removeItem('roomId'); // Remove roomId from localStorage on disconnect
+    });
+
+    // Add a message to the chat window
+    function addMessage(message) {
+      const div = document.createElement('div');
+      div.textContent = message;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll
+    }
+  </script>
+</body>
+
+</html>

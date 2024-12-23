@@ -73,7 +73,8 @@
 
   <script src="https://cdn.socket.io/4.5.3/socket.io.min.js"></script>
   <script>
-    const socket = io('http://localhost:2222'); // Update with your server URL
+   const socket = io('http://localhost:2222'); // Update with your server URL
+    //const socket = io('http://52.66.191.169:3000'); // Update with your server URL
     socket.on('connected', ({ clientId, roomId }) => {
         console.log(`Connected as ${clientId}, default room: ${roomId}`);
     
@@ -169,7 +170,7 @@
 
     // Listen for users joining
     socket.on('userJoined', ({ userName }) => {
-      addMessage(`${userName} joined room`);
+      addMessage(`${userName} joined room `);
     }); 
 
 

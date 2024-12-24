@@ -10,7 +10,6 @@ import { Server, Socket } from 'socket.io';
 import { SocketService } from './socket.service';
 import { PollyService } from 'src/aws/polly.service';
 import { GroqService } from 'src/groq/groq.service';
-import { url } from 'inspector';
 
 @WebSocketGateway({
   namespace: '/mychat', // Set the custom namespace/path here
@@ -107,6 +106,8 @@ export class SocketGateway implements OnGatewayInit {
       const result = await this.groqService.getChatCompletionOfImage(
         message,
         url,
+        client.id,
+        roomId,
         client.id,
       );
       // const result = await this.groqService.getChatCompletion(

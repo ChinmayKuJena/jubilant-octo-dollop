@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { log } from 'console';
 import Groq from 'groq-sdk';
 import { v4 as uuidv4 } from 'uuid';
+import { GroqDbService } from './groq.db.service';
 
 @Injectable()
 export class GroqService {
   private groq;
 
-  constructor() {
+  constructor(private readonly groqRepository: GroqDbService) {
+    log('GroqDbService:', this.groqRepository); // Log this object to ensure it's correctly initialized
+
     this.groq = new Groq({
       apiKey: process.env['GOOGLE_GEN_AI_API_KEY'],
     });
@@ -18,29 +22,52 @@ export class GroqService {
     return uuidv4();
   }
 
-  async getChatCompletion(message: string, userId: string) {
-    const requestId = this.generateRequestId();
-    const messageId = uuidv4(); // Generate a unique messageId
-    log('RequestId:', requestId, 'MessageId:', messageId, 'UserId:', userId);
-    
-    const chatCompletion = await this.groq.chat.completions.create({
-      messages: [{ role: 'user', content: message }],
+  async getChatCompletion(
+    request: string,
+    userId: string,
+    roomId: string,
+    clientid: string,
+  ) {
+    const requestid = this.generateRequestId();
+    log('RequestId:', requestid);
+
+    const response = await this.groq.chat.completions.create({
+      messages: [{ role: 'user', content: request }],
       model: process.env['MODEL'],
     });
 
-    const responseId = uuidv4(); // Generate a unique responseId
-    log('Chat Completion:', chatCompletion.choices[0]?.message?.content || '', 'ResponseId:', responseId);
-
+    const responseid = uuidv4();
+    log('Chat Completion:', response.choices[0]?.message?.content || '');
+    try {
+      await this.groqRepository.createGroqRecord({
+        requestid,
+        responseid,
+        request,
+        userid: userId,
+        response: response.choices[0]?.message?.content || '',
+        roomid: roomId,
+        clientid: userId,
+        createdat: new Date(),
+      });
+    } catch (error) {
+      console.error('Error creating Groq record:', error);
+      // You can log or handle the error as needed, but this will ensure it doesn't stop the execution.
+    }
     return {
-      requestId,
-      messageId,
+      requestid,
+      responseid,
       userId,
-      responseId,
-      content: chatCompletion.choices[0]?.message?.content || '',
+      content: response.choices[0]?.message?.content || '',
     };
   }
 
-  async getChatCompletionOfImage(message: string, userId: string) {
+  async getChatCompletionOfImage(
+    message: string,
+    url: string,
+    userId: string,
+    roomId: string,
+    clientid: string,
+  ) {
     const requestId = this.generateRequestId();
     const messageId = uuidv4(); // Generate a unique messageId
     log('RequestId:', requestId, 'MessageId:', messageId, 'UserId:', userId);
@@ -52,12 +79,13 @@ export class GroqService {
           content: [
             {
               type: 'text',
-              text: 'What\'s in this image? Can You Extract the text from this image? And return me in JSON object',
+              text: message,
+              // text: "What's in this image? Can You Extract the text from this image? And return me in JSON object",
             },
             {
               type: 'image_url',
               image_url: {
-                url: message,
+                url: url,
               },
             },
           ],
@@ -70,15 +98,28 @@ export class GroqService {
       stream: false,
       stop: null,
     });
-
-    const responseId = uuidv4(); // Generate a unique responseId
-    log('Chat Completion:', chatCompletion.choices[0]?.message?.content || '', 'ResponseId:', responseId);
+    try {
+      await this.groqRepository.createGroqRecord({
+        requestid: requestId,
+        responseid: uuidv4(),
+        request: `${message} .-. ${url}`,
+        userid: userId,
+        response: chatCompletion.choices[0]?.message?.content || '',
+        roomid: roomId,
+        clientid: userId,
+        createdat: new Date(),
+      });
+    } catch (error) {
+      console.error('Error creating Groq record:', error);
+      // You can log or handle the error as needed, but this will ensure it doesn't stop the execution.
+    }
+    // log('Chat Completion:', chatCompletion);
+    // log('Chat Completion:', chatCompletion.choices[0]?.message?.content || '');
 
     return {
       requestId,
       messageId,
       userId,
-      responseId,
       content: chatCompletion.choices[0]?.message?.content || '',
     };
   }

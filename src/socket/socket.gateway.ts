@@ -12,6 +12,8 @@ import { PollyService } from 'src/aws/polly.service';
 import { GroqService } from 'src/groq/groq.service';
 
 @WebSocketGateway({
+  namespace: '/mychat', // Set the custom namespace/path here
+
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
@@ -83,7 +85,7 @@ export class SocketGateway implements OnGatewayInit {
   // Send a message
   @SubscribeMessage('sendMessage')
   async handleMessage(
-    @MessageBody() { roomId, message }: { roomId: string; message: string },
+    @MessageBody() { roomId, message,url }: { roomId: string; message: string ,url:string},//url for image ai 
     @ConnectedSocket() client: Socket,
   ) {
     const user = this.socketService.getClient(client.id);
@@ -97,21 +99,31 @@ export class SocketGateway implements OnGatewayInit {
       return;
     }
 
-    console.log(`Message from ${user.userName} in room ${roomId}: ${message}`);
+    console.log(`Message from ${user.userName} in room ${roomId}: ${message}, ${url}`);
 
     try {
       // Get response from GroqService
-      const result = await this.groqService.getChatCompletion(
+      const result = await this.groqService.getChatCompletionOfImage(
         message,
+        url,
+        client.id,
+        roomId,
         client.id,
       );
+      // const result = await this.groqService.getChatCompletion(
+      //   message,
+      //   client.id,
+      //   roomId,
+      //   client.id,
+      // );
 
       // Generate audio using PollyService
       const audioBuffer = await this.pollyService.synthesizeSpeech(
         result.content,
         'Joanna',
       );
-
+      console.log("Output",result.content);
+      
       // Store the message
       this.socketService.storeMessage(roomId, {
         userId: client.id,
@@ -122,12 +134,13 @@ export class SocketGateway implements OnGatewayInit {
 
       // Broadcast the message and audio to the room
       this.server.to(roomId).emit('receiveMessage', {
+        
         userName: user.userName,
         content: result.content,
       });
-      this.server
-        .to(roomId)
-        .emit('audioMessage', audioBuffer.toString('base64'));
+      // this.server
+      //   .to(roomId)
+      //   .emit('audioMessage', audioBuffer.toString('base64'));
     } catch (error) {
       console.error('Error processing message:', error);
       client.emit('error', 'Failed to process the message');

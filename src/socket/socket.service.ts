@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { SocketDbService } from './socket.db.service';
 
 interface Client {
   roomId: string | null;
@@ -16,6 +17,7 @@ export class SocketService {
   private activeClients: Map<string, Client> = new Map();
   private messages: Record<string, Message[]> = {};
   public rooms: Map<string, boolean> = new Map(); // Track if room is occupied
+  constructor(private readonly socketDbService: SocketDbService) {}  // Inject SocketDbService
 
   // Add a new client
   addClient(clientId: string, roomId: string) {

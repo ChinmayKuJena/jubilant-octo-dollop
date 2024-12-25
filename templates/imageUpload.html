@@ -47,26 +47,33 @@
       }
     </style>
   </head>
-<body>
+  <body>
     <h1>Chat Room</h1>
     <div id="chat-container">
       <div id="join-room">
         <input type="text" id="userName" placeholder="Your Name" required />
         <button id="joinButton">Join Room</button>
       </div>
-      <div id="messages" style="display: none; overflow-y: auto; height: 300px;"></div>
-      <div id="form" style="display: none; flex-direction: column;">
+      <div
+        id="messages"
+        style="display: none; overflow-y: auto; height: 300px"
+      ></div>
+      <div id="form" style="display: none; flex-direction: column">
         <input type="text" id="messageInput" placeholder="Type a message" />
-        <input type="text" id="imageUrlInput" placeholder="Paste image URL (optional)" />
+        <input
+          type="text"
+          id="imageUrlInput"
+          placeholder="Paste image URL (optional)"
+        />
         <button id="sendButton">Send</button>
         <input type="file" id="imageInput" />
         <button id="uploadButton">Upload Image</button>
       </div>
     </div>
-    
+
     <script src="https://cdn.socket.io/4.5.3/socket.io.min.js"></script>
     <script>
-      const socket = io('http://localhost:2222/mychat');
+      const socket = io('http://localhost:2222/imageChat');
       const messagesDiv = document.getElementById('messages');
       const joinButton = document.getElementById('joinButton');
       const userNameInput = document.getElementById('userName');
@@ -75,9 +82,9 @@
       const imageInput = document.getElementById('imageInput');
       const uploadButton = document.getElementById('uploadButton');
       const imageUrlInput = document.getElementById('imageUrlInput');
-    
+
       let roomId = null;
-    
+
       // Join room
       joinButton.addEventListener('click', () => {
         const userName = userNameInput.value.trim();
@@ -85,34 +92,38 @@
           alert('Username is required!');
           return;
         }
-    
+
         roomId = roomId || 'default-room';
         socket.emit('joinRoom', { roomId, userName });
-    
+
         document.getElementById('join-room').style.display = 'none';
         messagesDiv.style.display = 'block';
         document.getElementById('form').style.display = 'flex';
-    
+
         addMessage(`You joined the room: ${roomId}`);
       });
-    
+
       // Send message
       sendButton.addEventListener('click', () => {
         const message = messageInput.value.trim();
         const imageUrl = imageUrlInput.value.trim();
-    
+
         if (message || imageUrl) {
           const content = { roomId, message, url: imageUrl };
-          socket.emit('sendMessage', content);
-    
-          addMessage(`You: ${message || ''} ${imageUrl ? `(Image: ${imageUrl})` : ''}`);
+          socket.emit('sendMessageImage', content);
+
+          addMessage(
+            `You: ${message || ''} ${imageUrl ? `(Image: ${imageUrl})` : ''}`,
+          );
           messageInput.value = '';
           imageUrlInput.value = '';
         } else {
-          alert('Please type a message or provide an image URL before sending.');
+          alert(
+            'Please type a message or provide an image URL before sending.',
+          );
         }
       });
-    
+
       // Upload image
       uploadButton.addEventListener('click', async () => {
         const file = imageInput.files[0];
@@ -120,17 +131,17 @@
           alert('Please select an image file to upload.');
           return;
         }
-    
+
         const formData = new FormData();
         formData.append('file', file);
-    
+
         try {
           const response = await fetch('http://localhost:2222/s3/uploads3', {
             method: 'POST',
             body: formData,
           });
           const result = await response.json();
-    
+
           if (response.ok) {
             const imageUrl = result.url;
             imageUrlInput.value = imageUrl; // Pre-fill the URL input
@@ -143,15 +154,37 @@
           alert('Error uploading image. Please try again.');
         }
       });
-    
+
       // Listen for incoming messages
-      socket.on('receiveMessage', ({ userName, content }) => {
-        const receivedMessage = `${userName}: ${content}`;
+      socket.on('receiveMessageImage', ({ userName, content }) => {
+        const receivedMessage = `Backend: ${content}`;
         console.log(content);
         addMessage(receivedMessage);
       });
-      
-    
+
+      // Listen for audio messages
+      socket.on('audioMessage', (audioBase64) => {
+        const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
+        const div = document.createElement('div');
+
+        // Add play/pause button
+        const playPauseButton = document.createElement('button');
+        audio.play();
+        playPauseButton.textContent = 'Pause';
+        playPauseButton.addEventListener('click', () => {
+          if (audio.paused) {
+            audio.play();
+            playPauseButton.textContent = 'Pause';
+          } else {
+            audio.pause();
+            playPauseButton.textContent = 'Play';
+          }
+        });
+
+        div.appendChild(playPauseButton);
+        messagesDiv.appendChild(div);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll
+      });
       // Function to add messages to the chat
       function addMessage(message) {
         const div = document.createElement('div');
@@ -160,6 +193,5 @@
         messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll
       }
     </script>
-    
-</body>
+  </body>
 </html>

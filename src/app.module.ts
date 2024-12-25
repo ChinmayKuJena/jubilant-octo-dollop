@@ -31,6 +31,10 @@ import { UiModule } from './ui/ui.module';
         entities: [GroqEntity,SocketDataEntity],
         synchronize: false,
         logging: true,
+        ssl: {
+          rejectUnauthorized: true,
+          ca: (configService.get<string>('DB_SSL_CERT_PATH')).toString(),
+        },
       }),
     }),
     UiModule,

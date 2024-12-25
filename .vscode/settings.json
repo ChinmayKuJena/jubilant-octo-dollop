@@ -1,0 +1,23 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "172.31.51.187",
+            "port": 5432,
+            "askForPassword": true,
+            "driver": "PostgreSQL",
+            "name": "wsl",
+            "database": "postgres",
+            "username": "postgres"
+        },
+        {
+            "previewLimit": 50,
+            "server": "pg-226a5620-mori09jim-5a7c.e.aivencloud.com",
+            "port": 21257,
+            "driver": "PostgreSQL",
+            "name": "pg-226a5620-mori09jim-5a7c.e.aivencloud.com",
+            "database": "myprj",
+            "username": "avnadmin"
+        }
+    ]
+}

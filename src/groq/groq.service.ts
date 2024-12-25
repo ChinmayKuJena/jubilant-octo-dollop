@@ -32,7 +32,13 @@ export class GroqService {
     log('RequestId:', requestid);
 
     const response = await this.groq.chat.completions.create({
-      messages: [{ role: 'user', content: request }],
+      messages: [
+        {
+          role: 'system',
+          content: 'you are a helpful assistant.',
+        },
+        { role: 'user', content: request },
+      ],
       model: process.env['MODEL'],
     });
 
@@ -60,6 +66,50 @@ export class GroqService {
       content: response.choices[0]?.message?.content || '',
     };
   }
+  async handleImageInput(url: string): Promise<any> {
+    // Check if the URL is valid and exists
+    if (!url) {
+      throw new Error('Invalid image URL');
+    }
+
+    try {
+      const chatCompletion = await this.groq.chat.completions.create({
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: "What's in this image?",
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: 'https://test9990069.s3.ap-south-1.amazonaws.com/uploads/-07+081900.png',
+                },
+              },
+            ],
+          },
+        ],
+        model: process.env['VISION_MODEL'],
+        temperature: 1,
+        max_tokens: 1024,
+        top_p: 1,
+        stream: false,
+      });
+
+      // Simplify and format the response for easier output
+      return {
+        message:
+          chatCompletion.choices[0]?.message?.content ||
+          'No response from API.',
+        imageUrl: url,
+      };
+    } catch (error) {
+      console.error('Error processing image URL:', error);
+      throw new Error('Error processing image URL');
+    }
+  }
 
   async getChatCompletionOfImage(
     message: string,
@@ -71,33 +121,39 @@ export class GroqService {
     const requestId = this.generateRequestId();
     const messageId = uuidv4(); // Generate a unique messageId
     log('RequestId:', requestId, 'MessageId:', messageId, 'UserId:', userId);
-
-    const chatCompletion = await this.groq.chat.completions.create({
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: message,
-              // text: "What's in this image? Can You Extract the text from this image? And return me in JSON object",
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: url,
+    let chatCompletion: any = null;
+    try {
+      chatCompletion = await this.groq.chat.completions.create({
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: message,
+                // text: "What's in this image? Can You Extract the text from this image? And return me in JSON object",
               },
-            },
-          ],
-        },
-      ],
-      model: process.env['VISION_MODEL'],
-      temperature: 1,
-      max_tokens: 1024,
-      top_p: 1,
-      stream: false,
-      stop: null,
-    });
+              {
+                type: 'image_url',
+                image_url: {
+                  url: url,
+                },
+              },
+            ],
+          },
+        ],
+        model: process.env['VISION_MODEL'],
+        temperature: 1,
+        max_tokens: 1024,
+        top_p: 1,
+        stream: false,
+        stop: null,
+      });
+    } catch (error) {
+      console.error('Error creating Groq Image:', error);
+      // You can log or handle the error as needed, but this will ensure it doesn't stop the execution.
+    }
+
     try {
       await this.groqRepository.createGroqRecord({
         requestid: requestId,

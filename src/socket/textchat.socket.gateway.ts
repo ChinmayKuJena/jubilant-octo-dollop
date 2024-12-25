@@ -20,7 +20,7 @@ import { GroqService } from 'src/groq/groq.service';
     allowedHeaders: ['Content-Type'],
   },
 })
-export class SocketGateway implements OnGatewayInit {
+export class TextChatSocketGateway implements OnGatewayInit {
   @WebSocketServer() server: Server;
 
   constructor(
@@ -117,11 +117,11 @@ export class SocketGateway implements OnGatewayInit {
       //   client.id,
       // );
 
-      // Generate audio using PollyService
-      const audioBuffer = await this.pollyService.synthesizeSpeech(
-        result.content,
-        'Joanna',
-      );
+      // // Generate audio using PollyService
+      // const audioBuffer = await this.pollyService.synthesizeSpeech(
+      //   result.content,
+      //   'Joanna',
+      // );
       console.log("Output",result.content);
       
       // Store the message

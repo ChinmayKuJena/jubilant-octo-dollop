@@ -103,25 +103,25 @@ export class TextChatSocketGateway implements OnGatewayInit {
 
     try {
       // Get response from GroqService
-      const result = await this.groqService.getChatCompletionOfImage(
-        message,
-        url,
-        client.id,
-        roomId,
-        client.id,
-      );
-      // const result = await this.groqService.getChatCompletion(
+      // const result = await this.groqService.getChatCompletionOfImage(
       //   message,
+      //   url,
       //   client.id,
       //   roomId,
       //   client.id,
       // );
+      const result = await this.groqService.getChatCompletion(
+        message,
+        client.id,
+        roomId,
+        client.id,
+      );
 
-      // // Generate audio using PollyService
-      // const audioBuffer = await this.pollyService.synthesizeSpeech(
-      //   result.content,
-      //   'Joanna',
-      // );
+      // Generate audio using PollyService
+      const audioBuffer = await this.pollyService.synthesizeSpeech(
+        result.content,
+        'Joanna',
+      );
       console.log("Output",result.content);
       
       // Store the message
@@ -138,9 +138,9 @@ export class TextChatSocketGateway implements OnGatewayInit {
         userName: user.userName,
         content: result.content,
       });
-      // this.server
-      //   .to(roomId)
-      //   .emit('audioMessage', audioBuffer.toString('base64'));
+      this.server
+        .to(roomId)
+        .emit('audioMessage', audioBuffer.toString('base64'));
     } catch (error) {
       console.error('Error processing message:', error);
       client.emit('error', 'Failed to process the message');

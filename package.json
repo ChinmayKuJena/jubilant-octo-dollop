@@ -1,5 +1,5 @@
 {
-  "name": "google-gen-ai",
+  "name": "my-ai-chat-app",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -22,6 +22,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.717.0",
     "@google/generative-ai": "^0.21.0",
+    "@nestjs/cache-manager": "^2.3.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.3.0",
     "@nestjs/core": "^10.0.0",
@@ -35,6 +36,9 @@
     "dotenv": "^16.4.7",
     "google-gen-ai": "file:",
     "groq-sdk": "^0.9.1",
+    "jsonwebtoken": "^9.0.2",
+    "my-ai-chat-app": "file:",
+    "nodemailer": "^6.9.16",
     "pg": "^8.13.1",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
@@ -48,6 +52,7 @@
     "@nestjs/testing": "^10.0.0",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.2",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/multer": "^1.4.12",
     "@types/node": "^20.3.1",
     "@types/supertest": "^6.0.0",

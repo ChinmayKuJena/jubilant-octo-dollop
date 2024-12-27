@@ -9,6 +9,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { GroqEntity } from './groq/groq.entity';
 import { SocketDataEntity } from './socket/socketdata.entity';
 import { UiModule } from './ui/ui.module';
+import { EmailOtpModule } from './email-otp/email-otp.module';
+import { UsersModule } from './users/users.module';
+import { UserEntity } from './users/entity/users.entity';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './auth/web.auth';
 
 @Module({
   imports: [
@@ -28,18 +33,23 @@ import { UiModule } from './ui/ui.module';
         username: configService.get<string>('DB_USER'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [GroqEntity,SocketDataEntity],
+        entities: [GroqEntity,SocketDataEntity,UserEntity],
         synchronize: false,
         logging: true,
-        ssl: {
-          rejectUnauthorized: true,
-          ca: (configService.get<string>('DB_SSL_CERT_PATH')).toString(),
-        },
+        // ssl: {
+        //   rejectUnauthorized: true,
+        //   ca: (configService.get<string>('DB_SSL_CERT_PATH')).toString(),
+        // },
       }),
     }),
     UiModule,
+    EmailOtpModule,
+    UsersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+  {provide:APP_GUARD, useClass: AuthGuard},
+    AppService
+  ],
 })
 export class AppModule {}

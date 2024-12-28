@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Chat</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+      #messages {
+        height: 200px;
+        overflow-y: scroll;
+        border: 1px solid #ccc;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chat Application</h1>
+
+    <div id="messages"></div>
+
+    <input type="text" id="messageInput" placeholder="Type a message..." />
+    <button id="sendMessage">Send</button>
+
+    <script>
+      // Get the token from local storage
+      let token = localStorage.getItem('token');
+      const roomId = 'room123'; // Generate or get the room ID dynamically
+
+      // const token ='Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJDaGlubWF5MDkiLCJlbWFpbCI6ImNoaW5tYXkwOWplbmFAZ21haWwuY29tIiwiaWF0IjoxNzM1MzU4NTA1LCJleHAiOjE3NzEzNTg1MDV9.gzfFXGiHy3npYmZMaRzqLLswDJXdrN5Ggg6R7kLeXNA';
+
+      if (!token) {
+        alert('You are not authenticated. Redirecting to login.');
+        window.location.href = 'login.html'; // Redirect to the login page
+      } else {
+        // Add 'Bearer' prefix if not already included
+        if (!token.startsWith('Bearer ')) {
+          token = `Bearer ${token}`;
+        }
+      }
+
+      // Connect to the WebSocket server with the token
+      const socket = io('http://localhost:2222/chat', {
+        auth: { token },
+        query: { roomId }, // Pass room ID during connection
+      });
+
+      // Handle connection errors
+      socket.on('connect_error', (err) => {
+        console.error('Connection error:', err.message);
+        alert('Authentication failed. Redirecting to login.');
+        window.location.href = 'login.html'; // Redirect to the login page
+      });
+
+      // Subscribe to chat messages
+      socket.emit('subscribe_to_chat',roomId);
+
+      // Listen for incoming messages
+      socket.on('receive_message', (message) => {
+        const messagesDiv = document.getElementById('messages');
+        const messageElement = document.createElement('div');
+        messageElement.textContent = message;
+        messagesDiv.appendChild(messageElement);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to bottom
+      });
+
+      // Send a message to the server
+      document.getElementById('sendMessage').addEventListener('click', () => {
+        const message = document.getElementById('messageInput').value;
+        if (message) {
+          socket.emit('send_message', { roomId, message });
+          document.getElementById('messageInput').value = ''; // Clear input field
+        }
+      });
+    </script>
+  </body>
+</html>

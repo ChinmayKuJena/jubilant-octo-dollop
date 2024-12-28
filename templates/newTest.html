@@ -73,8 +73,15 @@
 
   <script src="https://cdn.socket.io/4.5.3/socket.io.min.js"></script>
   <script>
+    const jwtToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJDaGlubWF5MDkiLCJlbWFpbCI6ImNoaW5tYXkwOWplbmFAZ21haWwuY29tIiwiaWF0IjoxNzM1MzU1MDgyLCJleHAiOjE3NzEzNTUwODJ9.Ui0JsIYZf2_N0y3BAYc7dyWEldSh146EobFHDnmQp4o';
+
    const socket = io('http://localhost:2222/mychat'); // Update with your server URL
     //const socket = io('http://52.66.191.169:3000'); // Update with your server URL
+    //const socket = io('http://localhost:2222/mychat', {
+      //extraHeaders: {
+        //Authorization: `Bearer ${jwtToken}`,
+      //},
+    //});
     socket.on('connected', ({ clientId, roomId }) => {
         console.log(`Connected as ${clientId}, default room: ${roomId}`);
     

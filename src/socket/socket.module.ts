@@ -7,14 +7,17 @@ import { SocketDbService } from './socket.db.service';
 import { SocketDataEntity } from './socketdata.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ImagechatGateway } from './imagechat/imagechat.gateway';
+import { ChatGateway } from './chat/chat.gateway';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
   imports:[
     TypeOrmModule.forFeature([SocketDataEntity]),
 
     AwsModule,
-    GroqModule
+    GroqModule,
+    RedisModule,
   ],
-  providers: [SocketService, TextChatSocketGateway,SocketDbService, ImagechatGateway]
+  providers: [SocketService, TextChatSocketGateway,SocketDbService, ImagechatGateway, ChatGateway]
 })
 export class SocketModule {}

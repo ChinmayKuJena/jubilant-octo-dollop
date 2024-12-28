@@ -12,6 +12,26 @@
         border: 1px solid #ccc;
         margin-bottom: 10px;
       }
+
+      /* Toast styling */
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #333;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 5px;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.5s;
+      }
+
+      .toast.show {
+        display: block;
+        opacity: 1;
+      }
     </style>
   </head>
   <body>
@@ -22,16 +42,22 @@
     <input type="text" id="messageInput" placeholder="Type a message..." />
     <button id="sendMessage">Send</button>
 
+    <!-- Toast container -->
+    <div class="toast" id="toast"></div>
+
     <script>
+     // const BASE_URL = 'https://9e1e-2401-4900-74eb-8bb3-e8cd-273a-fa91-180.ngrok-free.app'; // Define your base URL here
+      const BASE_URL = 'ws://localhost:2222'; // Define your base URL here
+
       // Get the token from local storage
       let token = localStorage.getItem('token');
       const roomId = 'room123'; // Generate or get the room ID dynamically
 
-      // const token ='Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJDaGlubWF5MDkiLCJlbWFpbCI6ImNoaW5tYXkwOWplbmFAZ21haWwuY29tIiwiaWF0IjoxNzM1MzU4NTA1LCJleHAiOjE3NzEzNTg1MDV9.gzfFXGiHy3npYmZMaRzqLLswDJXdrN5Ggg6R7kLeXNA';
-
       if (!token) {
-        alert('You are not authenticated. Redirecting to login.');
-        window.location.href = 'login.html'; // Redirect to the login page
+        showToast('You are not authenticated. Redirecting to login.', 'error');
+        setTimeout(() => {
+          window.location.href = 'login.html'; // Redirect to the login page
+        }, 2000);
       } else {
         // Add 'Bearer' prefix if not already included
         if (!token.startsWith('Bearer ')) {
@@ -40,7 +66,7 @@
       }
 
       // Connect to the WebSocket server with the token
-      const socket = io('http://localhost:2222/chat', {
+      const socket = io(`${BASE_URL}/chat`, {
         auth: { token },
         query: { roomId }, // Pass room ID during connection
       });
@@ -48,12 +74,14 @@
       // Handle connection errors
       socket.on('connect_error', (err) => {
         console.error('Connection error:', err.message);
-        alert('Authentication failed. Redirecting to login.');
-        window.location.href = 'login.html'; // Redirect to the login page
+        showToast('Authentication failed. Redirecting to login.', 'error');
+        setTimeout(() => {
+          window.location.href = 'login.html'; // Redirect to the login page
+        }, 2000);
       });
 
       // Subscribe to chat messages
-      socket.emit('subscribe_to_chat',roomId);
+      socket.emit('subscribe_to_chat', roomId);
 
       // Listen for incoming messages
       socket.on('receive_message', (message) => {
@@ -72,6 +100,17 @@
           document.getElementById('messageInput').value = ''; // Clear input field
         }
       });
+
+      // Function to show toast messages
+      function showToast(message, type) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast ${type === 'error' ? 'error' : 'success'}`;
+        toast.classList.add('show');
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 3000);
+      }
     </script>
   </body>
 </html>

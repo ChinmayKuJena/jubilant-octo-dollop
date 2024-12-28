@@ -1,114 +1,116 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Authentication</title>
     <style>
-        /* Styling for simplicity */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .auth-container {
-            max-width: 400px;
-            margin: auto;
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-        h1 {
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .error-message {
-            color: red;
-            font-size: 0.9em;
-            text-align: center;
-        }
-        /* Toast styling */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 5px;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
-        .toast.show {
-            display: block;
-            opacity: 1;
-        }
+      /* Styling for simplicity */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f4;
+      }
+      .auth-container {
+        max-width: 400px;
+        margin: auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+      h1 {
+        text-align: center;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      button {
+        width: 100%;
+        padding: 10px;
+        background: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .error-message {
+        color: red;
+        font-size: 0.9em;
+        text-align: center;
+      }
+      /* Toast styling */
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #333;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 5px;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.5s;
+      }
+      .toast.show {
+        display: block;
+        opacity: 1;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="auth-container" id="auth-container">
-        <h1 id="auth-title">Login</h1>
-        <form id="auth-form" novalidate>
-            <div id="login-form">
-                <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="number">Phone Number:</label>
-                    <input type="text" id="number" name="number" required>
-                </div>
-                <div class="form-group">
-                    <button type="submit">Login</button>
-                </div>
-            </div>
-            <div id="otp-form" style="display: none;">
-                <div class="form-group">
-                    <label for="otp">Enter OTP:</label>
-                    <input type="text" id="otp" name="otp">
-                </div>
-                <div class="form-group">
-                    <button type="submit">Verify OTP</button>
-                </div>
-            </div>
-        </form>
-        <div class="error-message" id="error-message"></div>
+      <h1 id="auth-title">Login</h1>
+      <form id="auth-form" novalidate>
+        <div id="login-form">
+          <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required />
+          </div>
+          <div class="form-group">
+            <label for="number">Phone Number:</label>
+            <input type="text" id="number" name="number" required />
+          </div>
+          <div class="form-group">
+            <button type="submit">Login</button>
+          </div>
+        </div>
+        <div id="otp-form" style="display: none">
+          <div class="form-group">
+            <label for="otp">Enter OTP:</label>
+            <input type="text" id="otp" name="otp" />
+          </div>
+          <div class="form-group">
+            <button type="submit">Verify OTP</button>
+          </div>
+        </div>
+      </form>
+      <div class="error-message" id="error-message"></div>
     </div>
 
     <!-- Toast container -->
     <div class="toast" id="toast"></div>
 
-    <script>
+    <!-- <script>
+        const BASE_URL = 'http://localhost:2222'; // Define your base URL here
+
         const authForm = document.getElementById('auth-form');
         const loginForm = document.getElementById('login-form');
         const otpForm = document.getElementById('otp-form');
@@ -134,7 +136,7 @@
                 const number = document.getElementById('number').value.trim();
 
                 try {
-                    const response = await fetch('http://localhost:2222/users/login', {
+                    const response = await fetch(`${BASE_URL}/email/verify`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username, number }),
@@ -172,7 +174,7 @@
                 }
 
                 try {
-                    const response = await fetch('http://localhost:2222/email/verify', {
+                    const response = await fetch(`${BASE_URL}/email/verify`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email, otp }),
@@ -193,6 +195,106 @@
                 }
             }
         });
+    </script> -->
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const authForm = document.getElementById('auth-form');
+        const errorMessage = document.getElementById('error-message');
+        const loginForm = document.getElementById('login-form');
+        const otpForm = document.getElementById('otp-form');
+        const authTitle = document.getElementById('auth-title');
+
+        //    const BASE_URL = 'https://9e1e-2401-4900-74eb-8bb3-e8cd-273a-fa91-180.ngrok-free.app';
+        const BASE_URL = 'http://localhost:2222';
+
+        authForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          errorMessage.textContent = '';
+
+          if (loginForm.style.display !== 'none') {
+            const username = document.getElementById('username').value.trim();
+            const number = document.getElementById('number').value.trim();
+
+            if (!username || !number) {
+              showToast('Username and number are required.', 'error');
+              return;
+            }
+
+            try {
+              const response = await fetch(`${BASE_URL}/users/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, number }),
+              });
+
+              if (!response.ok) throw new Error(await response.text());
+
+              const data = await response.json();
+              localStorage.setItem('token', data.token);
+              localStorage.setItem('claim', JSON.stringify(data.claim));
+
+              loginForm.style.display = 'none';
+              otpForm.style.display = 'block';
+              authTitle.textContent = 'OTP Verification';
+              document
+                .getElementById('otp')
+                .setAttribute('required', 'required');
+
+              showToast('Login successful! Please enter OTP.', 'success');
+            } catch (error) {
+              showToast(
+                error.message || 'Login failed. Please try again.',
+                'error',
+              );
+            }
+          } else {
+            const otp = document.getElementById('otp').value.trim();
+            const claim = JSON.parse(localStorage.getItem('claim'));
+            const email = claim ? claim.email : null;
+
+            if (!email) {
+              showToast('Email not found. Please login again.', 'error');
+              return;
+            }
+
+            try {
+              const response = await fetch(`${BASE_URL}/email/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, otp }),
+              });
+
+              if (!response.ok) throw new Error(await response.text());
+
+              const isVerified = await response.json();
+
+              if (isVerified) {
+                showToast('OTP verified successfully!', 'success');
+                window.location.href = './socket.chat.html';
+              } else {
+                showToast('Invalid OTP. Please try again.', 'error');
+              }
+            } catch (error) {
+              showToast(
+                error.message || 'OTP verification failed. Please try again.',
+                'error',
+              );
+            }
+          }
+        });
+
+        function showToast(message, type) {
+          const toast = document.getElementById('toast');
+          toast.textContent = message;
+          toast.style.backgroundColor =
+            type === 'success' ? '#28a745' : '#dc3545';
+          toast.classList.add('show');
+          setTimeout(() => {
+            toast.classList.remove('show');
+          }, 3000);
+        }
+      });
     </script>
-</body>
+  </body>
 </html>

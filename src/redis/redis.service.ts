@@ -8,37 +8,31 @@ export class RedisService {
   async getAllKeys(pattern: string = '*'): Promise<string[]> {
     return await this.redisClient.keys(pattern);
   }
-
-  async set(key: string, value: string): Promise<void> {
-    await this.redisClient.set(key, value);
+  // Message operations using Redis Lists
+  async addMessageToRoom(roomId: string, message: string): Promise<void> {
+    const key = `room:${roomId}:messages`;
+    await this.redisClient.lpush(key, message);
+    await this.redisClient.expire(key, 1200); // 20-minute expiration
   }
 
-  async get(key: string): Promise<string> {
-    return await this.redisClient.get(key);
+  async getMessagesForRoom(roomId: string): Promise<string[]> {
+    const key = `room:${roomId}:messages`;
+    return await this.redisClient.lrange(key, 0, -1);
   }
 
-  async publish(channel: string, message: string): Promise<void> {
-    await this.redisClient.publish(channel, message);
+  // Metadata operations using Redis Hashes
+  async setRoomMetadata(roomId: string, userId: string, status: string): Promise<void> {
+    const key = `room:${roomId}`;
+    await this.redisClient.hset(key, userId, status);
   }
 
-  async subscribe(channel: string, callback: (message: string) => void): Promise<void> {
-    const subscriber = this.redisClient.duplicate();
-    await subscriber.subscribe(channel);
-    subscriber.on('message', (channel, message) => {
-      callback(message);
-    });
+  async getRoomMetadata(roomId: string): Promise<Record<string, string>> {
+    const key = `room:${roomId}`;
+    return await this.redisClient.hgetall(key);
   }
 
-  async hset(key: string, field: string, value: string): Promise<void> {
-    await this.redisClient.hset(key, field, value);
-  }
-  
-  async hget(key: string, field: string): Promise<string> {
-    return await this.redisClient.hget(key, field);
-  }
-  
-  async del(key: string): Promise<void> {
+  async deleteRoomMetadata(roomId: string): Promise<void> {
+    const key = `room:${roomId}`;
     await this.redisClient.del(key);
   }
-  
 }

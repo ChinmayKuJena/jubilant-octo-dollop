@@ -10,6 +10,7 @@ import {
 import { Socket } from 'socket.io';
 import { AuthGuard } from 'src/auth/web.auth';
 import { RedisService } from 'src/redis/redis.service';
+
 @WebSocketGateway({ namespace: 'chat' })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(private readonly redisService: RedisService) {}
@@ -18,16 +19,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const roomId = client.handshake.query.roomId as string;
     console.log(`Client ${client.id} connected to room ${roomId}`);
     
-    // Store or validate room metadata
-    await this.redisService.hset(`room:${roomId}`, client.id, 'connected');
+    // Set user metadata in Redis
+    const userId = client.id;
+    await this.redisService.setRoomMetadata(roomId, userId, 'connected');
   }
 
   async handleDisconnect(client: Socket) {
     const roomId = client.handshake.query.roomId as string;
-    await this.redisService.del(`room:${roomId}`);
+    const userId = client.id;
+
+    // Remove user metadata
+    await this.redisService.setRoomMetadata(roomId, userId, 'disconnected');
     console.log(`Client ${client.id} disconnected from room ${roomId}`);
   }
-  
 
   @SubscribeMessage('send_message')
   @UseGuards(AuthGuard)
@@ -38,10 +42,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { roomId, message } = data;
     console.log(`Message to room ${roomId}: ${message}`);
 
-    // Publish the message to the room's channel
-    await this.redisService.publish(`room:${roomId}:messages`, message);
+    // Add message to Redis list
+    await this.redisService.addMessageToRoom(roomId, message);
 
-    // Broadcast to other participants in the room
+    // Broadcast the message to other users in the room
     client.broadcast.to(roomId).emit('receive_message', message);
   }
 
@@ -50,11 +54,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() roomId: string,
     @ConnectedSocket() client: Socket,
   ) {
-    // Join the socket.io room
+    // Join the room in Socket.IO
     client.join(roomId);
 
-    // Subscribe to the Redis channel for the room
-    await this.redisService.subscribe(`room:${roomId}:messages`, (message) => {
+    // Retrieve past messages from Redis
+    const messages = await this.redisService.getMessagesForRoom(roomId);
+
+    // Send past messages to the newly connected user
+    messages.reverse().forEach((message) => {
       client.emit('receive_message', message);
     });
   }

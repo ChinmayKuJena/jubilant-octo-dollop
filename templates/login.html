@@ -8,7 +8,7 @@
         /* Styling for simplicity */
         body {
             font-family: Arial, sans-serif;
-            margin: 0; 
+            margin: 0;
             padding: 20px;
             background-color: #f4f4f4;
         }
@@ -55,6 +55,24 @@
             font-size: 0.9em;
             text-align: center;
         }
+        /* Toast styling */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .toast.show {
+            display: block;
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -87,12 +105,24 @@
         <div class="error-message" id="error-message"></div>
     </div>
 
+    <!-- Toast container -->
+    <div class="toast" id="toast"></div>
+
     <script>
         const authForm = document.getElementById('auth-form');
         const loginForm = document.getElementById('login-form');
         const otpForm = document.getElementById('otp-form');
         const authTitle = document.getElementById('auth-title');
         const errorMessage = document.getElementById('error-message');
+        const toast = document.getElementById('toast');
+
+        // Function to show toast notifications
+        function showToast(message, type = 'error') {
+            toast.textContent = message;
+            toast.style.backgroundColor = type === 'error' ? '#d9534f' : '#5bc0de';  // Red for errors, Blue for success
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000); // Hide after 3 seconds
+        }
 
         authForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -125,8 +155,10 @@
 
                     // Adjust required attributes
                     document.getElementById('otp').setAttribute('required', 'required');
+
+                    showToast('Login successful! Please enter OTP.', 'success');
                 } catch (error) {
-                    errorMessage.textContent = error.message || 'Login failed. Please try again.';
+                    showToast(error.message || 'Login failed. Please try again.', 'error');
                 }
             } else {
                 // OTP verification process
@@ -135,7 +167,7 @@
                 const email = claim ? claim.email : null;
 
                 if (!email) {
-                    errorMessage.textContent = 'Email not found. Please login again.';
+                    showToast('Email not found. Please login again.', 'error');
                     return;
                 }
 
@@ -151,15 +183,13 @@
                     const isVerified = await response.json();
 
                     if (isVerified) {
-                        alert('OTP verified successfully!');
-
-                        // Redirect to http://localhost:2222/ui/upload
-                        window.location.href = 'upload';
+                        showToast('OTP verified successfully!', 'success');
+                        window.location.href = './socket.chat.html'; // Redirect or perform additional actions
                     } else {
-                        errorMessage.textContent = 'Invalid OTP. Please try again.';
+                        showToast('Invalid OTP. Please try again.', 'error');
                     }
                 } catch (error) {
-                    errorMessage.textContent = error.message || 'OTP verification failed. Please try again.';
+                    showToast(error.message || 'OTP verification failed. Please try again.', 'error');
                 }
             }
         });

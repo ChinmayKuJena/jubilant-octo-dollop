@@ -29,7 +29,7 @@ export class EmailOtpService {
     const savedOtp = await this.cacheManager.get<string>(email);
     console.log(`OTP saved in cache for ${email}:`, savedOtp);
 
-    await this.sendOtpEmail(email, otp);
+    // await this.sendOtpEmail(email, otp);
 
     return {
       message: `OTP has been sent to ${email}`,

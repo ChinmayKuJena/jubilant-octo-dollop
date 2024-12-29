@@ -108,95 +108,6 @@
     <!-- Toast container -->
     <div class="toast" id="toast"></div>
 
-    <!-- <script>
-        const BASE_URL = 'http://localhost:2222'; // Define your base URL here
-
-        const authForm = document.getElementById('auth-form');
-        const loginForm = document.getElementById('login-form');
-        const otpForm = document.getElementById('otp-form');
-        const authTitle = document.getElementById('auth-title');
-        const errorMessage = document.getElementById('error-message');
-        const toast = document.getElementById('toast');
-
-        // Function to show toast notifications
-        function showToast(message, type = 'error') {
-            toast.textContent = message;
-            toast.style.backgroundColor = type === 'error' ? '#d9534f' : '#5bc0de';  // Red for errors, Blue for success
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000); // Hide after 3 seconds
-        }
-
-        authForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            errorMessage.textContent = '';
-
-            if (loginForm.style.display !== 'none') {
-                // Login process
-                const username = document.getElementById('username').value.trim();
-                const number = document.getElementById('number').value.trim();
-
-                try {
-                    const response = await fetch(`${BASE_URL}/email/verify`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, number }),
-                    });
-
-                    if (!response.ok) throw new Error(await response.text());
-
-                    const data = await response.json();
-
-                    // Store token and claim in local storage
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('claim', JSON.stringify(data.claim));
-
-                    // Switch to OTP form
-                    loginForm.style.display = 'none';
-                    otpForm.style.display = 'block';
-                    authTitle.textContent = 'OTP Verification';
-
-                    // Adjust required attributes
-                    document.getElementById('otp').setAttribute('required', 'required');
-
-                    showToast('Login successful! Please enter OTP.', 'success');
-                } catch (error) {
-                    showToast(error.message || 'Login failed. Please try again.', 'error');
-                }
-            } else {
-                // OTP verification process
-                const otp = document.getElementById('otp').value.trim();
-                const claim = JSON.parse(localStorage.getItem('claim'));
-                const email = claim ? claim.email : null;
-
-                if (!email) {
-                    showToast('Email not found. Please login again.', 'error');
-                    return;
-                }
-
-                try {
-                    const response = await fetch(`${BASE_URL}/email/verify`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, otp }),
-                    });
-
-                    if (!response.ok) throw new Error(await response.text());
-
-                    const isVerified = await response.json();
-
-                    if (isVerified) {
-                        showToast('OTP verified successfully!', 'success');
-                        window.location.href = './socket.chat.html'; // Redirect or perform additional actions
-                    } else {
-                        showToast('Invalid OTP. Please try again.', 'error');
-                    }
-                } catch (error) {
-                    showToast(error.message || 'OTP verification failed. Please try again.', 'error');
-                }
-            }
-        });
-    </script> -->
-
     <script>
       document.addEventListener('DOMContentLoaded', () => {
         const authForm = document.getElementById('auth-form');
@@ -205,8 +116,8 @@
         const otpForm = document.getElementById('otp-form');
         const authTitle = document.getElementById('auth-title');
 
-        //    const BASE_URL = 'https://9e1e-2401-4900-74eb-8bb3-e8cd-273a-fa91-180.ngrok-free.app';
-        const BASE_URL = 'http://13.126.46.170:2222';
+        //const BASE_URL = 'https://13.126.46.170:443';
+        const BASE_URL = 'https://localhost:443';
 
         authForm.addEventListener('submit', async (event) => {
           event.preventDefault();

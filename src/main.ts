@@ -18,6 +18,7 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type, Authorization',
   });
 
-  await app.listen(443); // Default HTTPS port
+  await app.listen(2222); // Default HTTPS port
+  
 }
 bootstrap();

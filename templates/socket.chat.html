@@ -7,13 +7,33 @@
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <style>
       #messages {
-        height: 200px;
-        overflow-y: scroll;
+        height: 300px;
+        overflow-y: auto;
         border: 1px solid #ccc;
+        margin-bottom: 10px;
+        padding: 10px;
+        font-family: Arial, sans-serif;
+      }
+
+      .message {
         margin-bottom: 10px;
       }
 
-      /* Toast styling */
+      .message .meta {
+        font-size: 0.8rem;
+        color: gray;
+      }
+
+      #messageInput {
+        width: calc(100% - 80px);
+        padding: 5px;
+      }
+
+      #sendMessage {
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+
       .toast {
         position: fixed;
         bottom: 20px;
@@ -42,36 +62,32 @@
     <input type="text" id="messageInput" placeholder="Type a message..." />
     <button id="sendMessage">Send</button>
 
-    <!-- Toast container -->
     <div class="toast" id="toast"></div>
 
     <script>
+      const BASE_URL = 'https://localhost:2222';
 
-
-     // const BASE_URL = 'https://9e1e-2401-4900-74eb-8bb3-e8cd-273a-fa91-180.ngrok-free.app'; // Define your base URL here
-        const BASE_URL = 'https://13.126.46.170:443';
-     //const BASE_URL = 'https://7db4-2401-4900-75a9-13f6-cad-ab6d-8750-b4e9.ngrok-free.app';
-
-      // Get the token from local storage
+      // Authentication setup
       let token = localStorage.getItem('token');
-      const roomId = 'room123'; // Generate or get the room ID dynamically
+      //let userId = localStorage.getItem('claim');
+      const claim = JSON.parse(localStorage.getItem('claim'));
+      const userId = claim ? claim.id : null;
+      const userName = claim ? claim.username : null;
+      console.log(userId);
+      const roomId = 'room1232'; // Use dynamic room ID as needed
 
       if (!token) {
         showToast('You are not authenticated. Redirecting to login.', 'error');
         setTimeout(() => {
-          window.location.href = 'login.html'; // Redirect to the login page
+          window.location.href = 'login.html';
         }, 2000);
-      } else {
-        // Add 'Bearer' prefix if not already included
-        if (!token.startsWith('Bearer ')) {
-          token = `Bearer ${token}`;
-        }
+      } else if (!token.startsWith('Bearer ')) {
+        token = `Bearer ${token}`;
       }
 
-      // Connect to the WebSocket server with the token
       const socket = io(`${BASE_URL}/chat`, {
         auth: { token },
-        query: { roomId }, // Pass room ID during connection
+        query: { roomId },
       });
 
       // Handle connection errors
@@ -79,32 +95,56 @@
         console.error('Connection error:', err.message);
         showToast('Authentication failed. Redirecting to login.', 'error');
         setTimeout(() => {
-          window.location.href = 'login.html'; // Redirect to the login page
+          window.location.href = 'login.html';
         }, 2000);
       });
 
-      // Subscribe to chat messages
+      // Subscribe to chat history
       socket.emit('subscribe_to_chat', roomId);
 
-      // Listen for incoming messages
-      socket.on('receive_message', (message) => {
+      socket.on('chat_history', (messages) => {
         const messagesDiv = document.getElementById('messages');
-        const messageElement = document.createElement('div');
-        messageElement.textContent = message;
-        messagesDiv.appendChild(messageElement);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll to bottom
+        messagesDiv.innerHTML = ''; // Clear existing messages
+        messages.forEach(({ userId, message, timestamp }) => {
+          addMessageToUI(userName, message, timestamp);
+        });
       });
 
-      // Send a message to the server
+      socket.on('receive_message', (data) => {
+        const {
+          userId: senderId,
+          userName: senderName,
+          message,
+          timestamp,
+        } = data;
+        const isOwner = senderId === userId;
+        addMessageToUI(senderName, message, timestamp, isOwner);
+      });
+
       document.getElementById('sendMessage').addEventListener('click', () => {
-        const message = document.getElementById('messageInput').value;
+        const message = document.getElementById('messageInput').value.trim();
         if (message) {
           socket.emit('send_message', { roomId, message });
-          document.getElementById('messageInput').value = ''; // Clear input field
+          const timestamp = new Date().toISOString(); // Generate current timestamp
+
+          addMessageToUI(userName, message, timestamp, true);
+
+          document.getElementById('messageInput').value = '';
         }
       });
 
-      // Function to show toast messages
+      function addMessageToUI(userName, message, timestamp, isOwner) {
+        const messagesDiv = document.getElementById('messages');
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+        messageElement.innerHTML = `
+          <div><strong>${isOwner ? 'You' : userName}:</strong> ${message}</div>
+          <div class="meta"><em>${new Date(timestamp).toLocaleString()}</em></div>
+        `;
+        messagesDiv.appendChild(messageElement);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
       function showToast(message, type) {
         const toast = document.getElementById('toast');
         toast.textContent = message;

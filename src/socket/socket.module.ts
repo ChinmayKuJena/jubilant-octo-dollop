@@ -9,6 +9,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ImagechatGateway } from './imagechat/imagechat.gateway';
 import { ChatGateway } from './chat/chat.gateway';
 import { RedisModule } from 'src/redis/redis.module';
+import { AiChatGateway } from './ai-chat/ai-chat.gateway';
 
 @Module({
   imports:[
@@ -18,6 +19,6 @@ import { RedisModule } from 'src/redis/redis.module';
     GroqModule,
     RedisModule,
   ],
-  providers: [SocketService, TextChatSocketGateway,SocketDbService, ImagechatGateway, ChatGateway]
+  providers: [SocketService, TextChatSocketGateway,SocketDbService, ImagechatGateway, ChatGateway, AiChatGateway]
 })
 export class SocketModule {}

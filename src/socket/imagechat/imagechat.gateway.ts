@@ -2,7 +2,7 @@ import { ConnectedSocket, MessageBody, OnGatewayInit, SubscribeMessage, WebSocke
 import { Server, Socket } from 'socket.io';
 import { SocketService } from '../socket.service';
 import { PollyService } from 'src/aws/polly.service';
-import { GroqService } from 'src/groq/groq.service';
+import { GroqServiceBackeUp } from 'src/groq/groq.service-backup';
 
 @WebSocketGateway({
   namespace: '/imageChat', // Set the custom namespace/path here
@@ -19,7 +19,7 @@ export class ImagechatGateway implements OnGatewayInit {
   constructor(
     private readonly socketService: SocketService,
     private readonly pollyService: PollyService,
-    private readonly groqService: GroqService,
+    private readonly groqService: GroqServiceBackeUp,
   ) {}
   afterInit() {
     console.log('WebSocket Gateway Initialized Of Image Chat');

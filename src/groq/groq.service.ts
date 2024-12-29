@@ -1,182 +1,45 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { log } from 'console';
-import Groq from 'groq-sdk';
 import { v4 as uuidv4 } from 'uuid';
-import { GroqDbService } from './groq.db.service';
+import Groq from 'groq-sdk';
+import { botStory, Prompts } from 'src/utils/promopts';
 
 @Injectable()
 export class GroqService {
   private groq;
 
-  constructor(private readonly groqRepository: GroqDbService) {
-    log('GroqDbService:', this.groqRepository); // Log this object to ensure it's correctly initialized
-
+  constructor() {
     this.groq = new Groq({
-      apiKey: process.env['GOOGLE_GEN_AI_API_KEY'],
+      apiKey: process.env['GOOGLE_GEN_AI_API_KEY'], // Set your API Key in environment variables
     });
   }
 
-  // Method to generate a new unique ID for each request
+  // Generate a new unique ID for each request
   generateRequestId(): string {
     return uuidv4();
   }
 
-  async getChatCompletion(
-    request: string,
-    userId: string,
-    roomId: string,
-    clientid: string,
-  ) {
+  // Generate a chatbot response with a friendly tone and behavior
+  async getChatCompletionWithPrompt(request: string): Promise<any> {
     const requestid = this.generateRequestId();
-    log('RequestId:', requestid);
+    const behavior = Prompts.behavior; // Fetch tone and style from configuration
+    const storyTriggers = ["who are you", "tell me about yourself", "what is your story"];
+    const storyResponse = botStory.story;
 
     const response = await this.groq.chat.completions.create({
       messages: [
         {
           role: 'system',
-          content: 'you are a helpful assistant.',
+          content: `You are a chatbot with a ${behavior.tone} tone and ${behavior.style} style. Your role is: ${behavior.role}. You will only tell the story if the user specifically asks about it. If the user asks "tell me about yourself", or "what is your story", share the following story: ${storyResponse}`,
+          // content: `You are a chatbot with a ${behavior.tone} tone and ${behavior.style} style. Your role is: ${behavior.role}.`,
         },
         { role: 'user', content: request },
       ],
-      model: process.env['MODEL'],
+      model: process.env['MODEL'], // Set the model name, e.g., 'gpt-3.5-turbo'
     });
 
-    const responseid = uuidv4();
-    log('Chat Completion:', response.choices[0]?.message?.content || '');
-    // try {
-    //   await this.groqRepository.createGroqRecord({
-    //     requestid,
-    //     responseid,
-    //     request,
-    //     userid: userId,
-    //     response: response.choices[0]?.message?.content || '',
-    //     roomid: roomId,
-    //     clientid: userId,
-    //     createdat: new Date(),
-    //   });
-    // } catch (error) {
-    //   console.error('Error creating Groq record:', error);
-    //   // You can log or handle the error as needed, but this will ensure it doesn't stop the execution.
-    // }
     return {
       requestid,
-      responseid,
-      userId,
       content: response.choices[0]?.message?.content || '',
-    };
-  }
-  async handleImageInput(url: string): Promise<any> {
-    // Check if the URL is valid and exists
-    if (!url) {
-      throw new Error('Invalid image URL');
-    }
-
-    try {
-      const chatCompletion = await this.groq.chat.completions.create({
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: "What's in this image?",
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: 'https://test9990069.s3.ap-south-1.amazonaws.com/uploads/-07+081900.png',
-                },
-              },
-            ],
-          },
-        ],
-        model: process.env['VISION_MODEL'],
-        temperature: 1,
-        max_tokens: 1024,
-        top_p: 1,
-        stream: false,
-      });
-
-      // Simplify and format the response for easier output
-      return {
-        message:
-          chatCompletion.choices[0]?.message?.content ||
-          'No response from API.',
-        imageUrl: url,
-      };
-    } catch (error) {
-      console.error('Error processing image URL:', error);
-      throw new Error('Error processing image URL');
-    }
-  }
-
-  async getChatCompletionOfImage(
-    message: string,
-    url: string,
-    userId: string,
-    roomId: string,
-    clientid: string,
-  ) {
-    const requestId = this.generateRequestId();
-    const messageId = uuidv4(); // Generate a unique messageId
-    log('RequestId:', requestId, 'MessageId:', messageId, 'UserId:', userId);
-    let chatCompletion: any = null;
-    try {
-      chatCompletion = await this.groq.chat.completions.create({
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: message,
-                // text: "What's in this image? Can You Extract the text from this image? And return me in JSON object",
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: url,
-                },
-              },
-            ],
-          },
-        ],
-        model: process.env['VISION_MODEL'],
-        temperature: 1,
-        max_tokens: 1024,
-        top_p: 1,
-        stream: false,
-        stop: null,
-      });
-    } catch (error) {
-      console.error('Error creating Groq Image:', error);
-      // You can log or handle the error as needed, but this will ensure it doesn't stop the execution.
-    }
-
-    // try {
-    //   await this.groqRepository.createGroqRecord({
-    //     requestid: requestId,
-    //     responseid: uuidv4(),
-    //     request: `${message} .-. ${url}`,
-    //     userid: userId,
-    //     response: chatCompletion.choices[0]?.message?.content || '',
-    //     roomid: roomId,
-    //     clientid: userId,
-    //     createdat: new Date(),
-    //   });
-    // } catch (error) {
-    //   console.error('Error creating Groq record:', error);
-    //   // You can log or handle the error as needed, but this will ensure it doesn't stop the execution.
-    // }
-    // log('Chat Completion:', chatCompletion);
-    // log('Chat Completion:', chatCompletion.choices[0]?.message?.content || '');
-
-    return {
-      requestId,
-      messageId,
-      userId,
-      content: chatCompletion.choices[0]?.message?.content || '',
     };
   }
 }

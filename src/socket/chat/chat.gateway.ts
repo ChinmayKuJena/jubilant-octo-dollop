@@ -18,7 +18,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleConnection(client: Socket) {
     const roomId = client.handshake.query.roomId as string;
     console.log(`Client ${client.id} connected to room ${roomId}`);
-    
+
     // Set user metadata in Redis
     const userId = client.id;
     await this.redisService.setRoomMetadata(roomId, userId, 'connected');
@@ -40,13 +40,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
   ) {
     const { roomId, message } = data;
-    console.log(`Message to room ${roomId}: ${message}`);
+    const userId = client.data.user.id;
+    const userName = client.data.user.username;
+    console.log(userName);
+    console.log(`Message to room ${roomId} from user ${userName}: ${message}`);
 
     // Add message to Redis list
-    await this.redisService.addMessageToRoom(roomId, message);
+    await this.redisService.addMessageToRoom(roomId, userId,userName, message);
 
     // Broadcast the message to other users in the room
-    client.broadcast.to(roomId).emit('receive_message', message);
+    client.broadcast.to(roomId).emit('receive_message', {
+      userId,
+      userName,
+      message,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   @SubscribeMessage('subscribe_to_chat')
@@ -62,7 +70,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     // Send past messages to the newly connected user
     messages.reverse().forEach((message) => {
-      client.emit('receive_message', message);
+      client.emit('chat_history', messages);
     });
   }
 }

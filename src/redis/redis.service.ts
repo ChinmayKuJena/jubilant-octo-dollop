@@ -5,22 +5,38 @@ import { Redis } from 'ioredis';
 export class RedisService {
   constructor(@Inject('REDIS_CLIENT') private readonly redisClient: Redis) {}
 
-  async getAllKeys(pattern: string = '*'): Promise<string[]> {
-    return await this.redisClient.keys(pattern);
-  }
-  // Message operations using Redis Lists
-  async addMessageToRoom(roomId: string, message: string): Promise<void> {
+  // Store message with metadata
+  async addMessageToRoom(
+    roomId: string,
+    userId: string,
+    userName:string,
+    message: string,
+  ): Promise<void> {
     const key = `room:${roomId}:messages`;
-    await this.redisClient.lpush(key, message);
+    const timestamp = new Date().toISOString();
+
+    const messageObject = {
+      message,
+      userName,
+      userId,
+      timestamp,
+    };
+
+    // Push the serialized JSON message into the Redis List
+    await this.redisClient.lpush(key, JSON.stringify(messageObject));
     await this.redisClient.expire(key, 1200); // 20-minute expiration
   }
 
-  async getMessagesForRoom(roomId: string): Promise<string[]> {
+  // Retrieve all messages for a room
+  async getMessagesForRoom(roomId: string): Promise<Record<string, any>[]> {
     const key = `room:${roomId}:messages`;
-    return await this.redisClient.lrange(key, 0, -1);
+    const messages = await this.redisClient.lrange(key, 0, -1);
+
+    // Deserialize JSON strings into objects
+    return messages.map((message) => JSON.parse(message));
   }
 
-  // Metadata operations using Redis Hashes
+  // Metadata operations remain unchanged
   async setRoomMetadata(roomId: string, userId: string, status: string): Promise<void> {
     const key = `room:${roomId}`;
     await this.redisClient.hset(key, userId, status);

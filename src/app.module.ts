@@ -15,6 +15,7 @@ import { UserEntity } from './users/entity/users.entity';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/web.auth';
 import { RedisModule } from './redis/redis.module';
+import { BotModule } from './bot/bot.module';
 
 @Module({
   imports: [
@@ -47,10 +48,11 @@ import { RedisModule } from './redis/redis.module';
     EmailOtpModule,
     UsersModule,
     RedisModule,
+    BotModule,
   ],
   controllers: [AppController],
   providers: [
- {provide:APP_GUARD, useClass: AuthGuard},
+  // {provide:APP_GUARD, useClass: AuthGuard},
     AppService
   ],
 })

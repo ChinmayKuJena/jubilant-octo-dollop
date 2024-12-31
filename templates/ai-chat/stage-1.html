@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Chat</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f7fc;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .chat-container {
+        display: flex;
+        flex-direction: column;
+        width: 80%;
+        max-width: 900px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: #fcf7da;
+        overflow: hidden;
+      }
+
+      .chat-log {
+        flex: 1;
+        padding: 20px;
+        overflow-y: scroll;
+        background-color: #f1f1f1;
+        border-bottom: 2px solid #ddd;
+        font-size: 16px;
+        color: #333;
+        white-space: pre-wrap;
+      }
+
+      .message-box {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border-top: 2px solid #ddd;
+      }
+
+      .message-box input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        margin-right: 10px;
+        font-size: 14px;
+      }
+
+      .message-box button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .message-box button:hover {
+        background-color: #45a049;
+      }
+
+      .message-left {
+        color: #000000;
+        font-weight: bold;
+      }
+
+      .message-right {
+        color: #1eff00;
+        font-weight: bold;
+        text-align: right;
+      }
+
+      .system-message {
+        font-style: italic;
+        color: #888;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 2em;
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="chat-container">
+      <h1>Chat with MOSE0998</h1>
+      <div class="chat-log" id="log"></div>
+      <div class="message-box">
+        <input type="text" id="message" placeholder="Type your message..." onkeydown="handleKeyDown(event)" />
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+
+    <script>
+      const socket = io('https://localhost:2222/mychat1');
+
+      socket.on('connect', () => {
+        console.log('Connected to WebSocket server');
+        document.getElementById('log').innerHTML += '<div class="system-message">🤖 Connected to server</div>';
+      });
+
+      socket.on('connected', (data) => {
+        console.log(`Joined room: ${data.roomId}`);
+      });
+
+      socket.on('message', (data) => {
+        console.log('Message from server:', data.content);
+        const serverMessage = `<div class="message-right">🤖 ${data.content}</div>`;
+        document.getElementById('log').innerHTML += serverMessage;
+        scrollToBottom();
+      });
+
+      socket.on('disconnect', () => {
+        console.log('WebSocket connection closed');
+      });
+
+      function sendMessage() {
+        const message = document.getElementById('message').value;
+        if (message.trim()) {
+          socket.emit('message', message, (response) => {
+            if (response.content) {
+              const userMessage = `<div class="message-left">👨‍💻 ${message}</div>`;
+              document.getElementById('log').innerHTML += userMessage;
+              document.getElementById('log').innerHTML += `<div class="message-right">🤖 ${response.content}</div>`;
+            } else {
+              document.getElementById('log').innerHTML += `<div class="system-message">Error processing your message</div>`;
+            }
+            scrollToBottom();
+          });
+          document.getElementById('message').value = '';
+        }
+      }
+
+      function handleKeyDown(event) {
+        if (event.key === 'Enter') {
+          sendMessage();
+        }
+      }
+
+      function scrollToBottom() {
+        const chatLog = document.getElementById('log');
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+    </script>
+  </body>
+</html>

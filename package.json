@@ -39,6 +39,8 @@
     "ioredis": "^5.4.2",
     "jsonwebtoken": "^9.0.2",
     "my-ai-chat-app": "file:",
+    "nestjs-telegraf": "^2.8.1",
+    "node-telegram-bot-api": "^0.66.0",
     "nodemailer": "^6.9.16",
     "pg": "^8.13.1",
     "redis": "^4.7.0",

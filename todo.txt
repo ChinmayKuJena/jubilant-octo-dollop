@@ -5,3 +5,5 @@ same for list
 https://chinmaykujena.github.io/jubilant-octo-dollop/templates/login.html
 // make chat bot with replay to users 
 // some emition showing 
+-----------
+// add auth and redis and cache responce 

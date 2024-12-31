@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Chat</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  </head>
+  <body>
+    <h1>Chatbot</h1>
+    <textarea id="log" rows="10" cols="50" readonly></textarea><br />
+    <input type="text" id="message" placeholder="Type your message" />
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+      const socket = io('https://localhost:2222/mychat1');
+
+      socket.on('connect', () => {
+        console.log('Connected to WebSocket server');
+        document.getElementById('log').value += 'Connected to server\n';
+      });
+
+      socket.on('connected', (data) => {
+        console.log(`Joined room: ${data.roomId}`);
+        //document.getElementById('log').value += `Joined room: ${data.roomId}\n`;
+      });
+
+      socket.on('message', (data) => {
+        console.log('Message from server:', data.content);
+        document.getElementById('log').value += `Groq: ${data.content}\n`;
+      });
+
+      socket.on('disconnect', () => {
+        console.log('WebSocket connection closed');
+        //document.getElementById('log').value += 'Connection closed\n';
+      });
+
+      function sendMessage() {
+        const message = document.getElementById('message').value;
+        if (message.trim()) {
+          socket.emit('message', message, (response) => {
+            if (response.content) {
+              document.getElementById('log').value += `Server: ${response.content}\n`;
+            } else {
+              document.getElementById('log').value += 'Error processing your message\n';
+            }
+          });
+          document.getElementById('log').value += `You: ${message}\n`;
+          document.getElementById('message').value = '';
+        }
+      }
+    </script>
+  </body>
+</html>

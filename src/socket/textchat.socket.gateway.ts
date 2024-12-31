@@ -10,6 +10,7 @@ import { Server, Socket } from 'socket.io';
 import { SocketService } from './socket.service';
 import { PollyService } from 'src/aws/polly.service';
 import { GroqService } from 'src/groq/groq.service';
+import { GroqServiceBackeUp } from 'src/groq/groq.service-backup';
 
 @WebSocketGateway({
   namespace: '/mychat', // Set the custom namespace/path here
@@ -26,7 +27,7 @@ export class TextChatSocketGateway implements OnGatewayInit {
   constructor(
     private readonly socketService: SocketService,
     private readonly pollyService: PollyService,
-    private readonly groqService: GroqService,
+    private readonly groqService: GroqServiceBackeUp,
   ) {}
 
   afterInit() {

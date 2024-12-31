@@ -20,11 +20,17 @@ export class BotService {
     console.log(`[Activity Log] ${userInfo} - ${activity}`);
   }
 
-  private async restrictToAdmins(ctx: Context, user: any, activity: string): Promise<boolean> {
+  private async restrictToAdmins(
+    ctx: Context,
+    user: any,
+    activity: string,
+  ): Promise<boolean> {
     this.logUserActivity(user, activity);
 
     if (!this.isAdmin(user)) {
-      await ctx.reply('Access Denied: This command is restricted to administrators.');
+      await ctx.reply(
+        'Access Denied: This command is restricted to administrators.',
+      );
       return false;
     }
     return true;
@@ -54,51 +60,48 @@ export class BotService {
   //   await ctx.reply(aiGreeting.content || greeting);
   // }
 
-
   @Start()
   async onStart(@Ctx() ctx: Context) {
     const user = ctx.message?.from;
     const firstName = user?.first_name || 'Guest';
-   
-  
+
     this.logUserActivity(user, 'Start Command');
-  
+
     // Define special days and greetings
     const specialDays: { [key: string]: string } = {
       '01-01': "Happy New Year! 🎉 Let's make this year amazing!",
       '12-25': 'Merry Christmas! 🎄 Hope you have a wonderful holiday!',
       '10-02': 'Happy Gandhi Jayanti! 🇮🇳 Let us remember the Mahatma today.',
-      '31-12': 'Advance New Year, '
+      '31-12': 'Advance New Year, ',
       // Add more special days here in the format MM-DD
     };
-  
+
     const currentDate = new Date();
     const formattedDate = currentDate.toISOString().slice(5, 10); // Format as MM-DD
     const specialGreeting = specialDays[formattedDate];
-  
+
     const currentHour = currentDate.getHours();
     const greeting =
       currentHour >= 5 && currentHour < 12
         ? 'Good Morning! 🌞'
         : currentHour >= 12 && currentHour < 17
-        ? 'Good Afternoon! 🌤️'
-        : currentHour >= 17 && currentHour < 22
-        ? 'Good Evening! 🌇'
-        : 'Good Night! 🌙';
-  
+          ? 'Good Afternoon! 🌤️'
+          : currentHour >= 17 && currentHour < 22
+            ? 'Good Evening! 🌇'
+            : 'Good Night! 🌙';
+
     const baseGreeting = `${greeting}, To : ${firstName}!`;
-  
+
     // const finalGreeting = specialGreeting
     //   ? `${baseGreeting}\n\n🎉 Special Message: ${specialGreeting}`
     //   : baseGreeting;
-  
+
     const aiGreeting = await this.service.getChatCompletionWithPrompt(
       `${baseGreeting} Welcome the user warmly.`,
     );
-  
+
     await ctx.reply(aiGreeting.content);
   }
-  
 
   @On('sticker')
   async onSticker(@Ctx() ctx: Context) {
@@ -135,93 +138,14 @@ export class BotService {
     );
   }
 
-  @Command('sai')
-  async onSai(@Ctx() ctx: Context) {
-    const user = ctx.message?.from;
-
-    if (!(await this.restrictToAdmins(ctx, user, 'Sai Command'))) {
-      return;
-    }
-
-    await this.handleRestrictedCommand(
-      ctx,
-      user,
-      'Greet Sai. He is studying in Balasore, loves to fly kites, and enjoys drawing.',
-      'Sai',
-    );
-  }
-
-  @Command('giri')
-  async onGiri(@Ctx() ctx: Context) {
-    const user = ctx.message?.from;
-
-    if (!(await this.restrictToAdmins(ctx, user, 'Giri Command'))) {
-      return;
-    }
-
-    await this.handleRestrictedCommand(
-      ctx,
-      user,
-      'Greet Giri. He is one of my friends.',
-      'Sai',
-    );
-  }
-
-  @Command('barish')
-  async onBarish(@Ctx() ctx: Context) {
-    const user = ctx.message?.from;
-
-    if (!(await this.restrictToAdmins(ctx, user, 'Barish Command'))) {
-      return;
-    }
-
-    await this.handleRestrictedCommand(
-      ctx,
-      user,
-      'Greet Barish. He is one of my friends.',
-      'Sai',
-    );
-  }
-
-  @Command('maa')
-  async onMaa(@Ctx() ctx: Context) {
-    const user = ctx.message?.from;
-
-    if (!(await this.restrictToAdmins(ctx, user, 'Maa Command'))) {
-      return;
-    }
-
-    await this.handleRestrictedCommand(
-      ctx,
-      user,
-      'Greet Maa. She is my mother.',
-      'Maa',
-    );
-  }
-
-  @Command('musa')
-  async onMusa(@Ctx() ctx: Context) {
-    const user = ctx.message?.from;
-
-    if (!(await this.restrictToAdmins(ctx, user, 'Musa Command'))) {
-      return;
-    }
-
-    await this.handleRestrictedCommand(
-      ctx,
-      user,
-      'Greet Musa (real name Manisha). She is my girlfriend and has supported me a lot over the last 3 years.',
-      'Musa',
-    );
-  }
-
   private async handleRestrictedCommand(
     ctx: Context,
     user: any,
     description: string,
     restrictedTo: string,
   ) {
-    const response = await this.service.getChatCompletionWithPrompt(description);
+    const response =
+      await this.service.getChatCompletionWithPrompt(description);
     await ctx.reply(response.content);
   }
 
@@ -232,10 +156,13 @@ export class BotService {
     this.logUserActivity(user, `Sent Text: ${userMessage}`);
 
     if (userMessage.startsWith('/')) {
-      return; 
+      return;
     }
 
-    const aiResponse = await this.service.getChatCompletionWithPrompt(userMessage);
-    await ctx.reply(aiResponse.content || 'Sorry, I could not understand that.');
+    const aiResponse =
+      await this.service.getChatCompletionWithPrompt(userMessage);
+    await ctx.reply(
+      aiResponse.content || 'Sorry, I could not understand that.',
+    );
   }
 }

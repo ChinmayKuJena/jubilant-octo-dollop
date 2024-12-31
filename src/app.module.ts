@@ -52,7 +52,7 @@ import { BotModule } from './bot/bot.module';
   ],
   controllers: [AppController],
   providers: [
-  {provide:APP_GUARD, useClass: AuthGuard},
+  // {provide:APP_GUARD, useClass: AuthGuard},
     AppService
   ],
 })

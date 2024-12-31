@@ -17,11 +17,6 @@ export class CommandRegistrationService {
       { command: 'about', description: 'Learn about this bot' },
       { command: 'time', description: 'Get the current time' },
       { command: 'joke', description: 'Get a random joke' },
-      { command: 'sai', description: 'Greet Sai' },
-      { command: 'maa', description: 'Greet Maa' },
-      // { command: 'musa', description: 'Greet Musa' },
-      { command: 'giri', description: 'Greet giri' },
-      { command: 'barish', description: 'Greet barish' },
     ]);
 
     console.log('Bot commands registered successfully!');

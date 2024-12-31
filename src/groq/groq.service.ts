@@ -31,7 +31,7 @@ export class GroqService {
             role: 'system',
             content: `Your Name is MANCHI0905 chatbot with a ${behavior.tone} tone and ${behavior.style} style. Your role is: ${behavior.role}.`,
           },
-          { role: 'user', content: request },
+          { role: 'user', content: `${request} . If User Askfor details then only send long conversation.` },
         ],
         model: process.env['MODEL'],
       });

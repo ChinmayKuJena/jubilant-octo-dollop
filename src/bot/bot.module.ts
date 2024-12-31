@@ -9,7 +9,6 @@ import { ConfigService } from '@nestjs/config';
   imports: [
     // TelegrafModule.forRoot({
     //   // token: process.env['BOT_TOKEN'],
-    //   token: '7902385594:AAHcHJPYJE05VjzpgZUi--55gTJ_0XCqdUI',
     // }),
     TelegrafModule.forRootAsync({
       inject: [ConfigService],

@@ -10,6 +10,7 @@ import { ImagechatGateway } from './imagechat/imagechat.gateway';
 import { ChatGateway } from './chat/chat.gateway';
 import { RedisModule } from 'src/redis/redis.module';
 import { AiChatGateway } from './ai-chat/ai-chat.gateway';
+import { LiveLocationGateway } from './location/location.gateway';
 
 @Module({
   imports:[
@@ -19,6 +20,6 @@ import { AiChatGateway } from './ai-chat/ai-chat.gateway';
     GroqModule,
     RedisModule,
   ],
-  providers: [SocketService, TextChatSocketGateway,SocketDbService, ImagechatGateway, ChatGateway, AiChatGateway]
+  providers: [SocketService, TextChatSocketGateway,SocketDbService, ImagechatGateway, ChatGateway, AiChatGateway, LiveLocationGateway]
 })
 export class SocketModule {}

@@ -35,5 +35,12 @@ export class UiController {
       // const htmlFilePath = path.join('/ui', 'index.html');
       return res.sendFile(htmlFilePath); // Serve the HTML file
     }
+    @Get('map')
+    @AllowAnonymous()
+    async map(@Res() res: Response) {
+      const htmlFilePath = path.join(__dirname, '..', '..', 'templates/location', 'live.location.html');
+      // const htmlFilePath = path.join('/ui', 'index.html');
+      return res.sendFile(htmlFilePath); // Serve the HTML file
+    }
   
 }

@@ -9,5 +9,6 @@ import { EmailOtpModule } from 'src/email-otp/email-otp.module';
   imports: [TypeOrmModule.forFeature([UserEntity]),EmailOtpModule],
   providers: [UsersService],
   controllers: [UsersController],
+  exports: [UsersService],
 })
 export class UsersModule {}

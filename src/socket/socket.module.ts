@@ -11,6 +11,9 @@ import { ChatGateway } from './chat/chat.gateway';
 import { RedisModule } from 'src/redis/redis.module';
 import { AiChatGateway } from './ai-chat/ai-chat.gateway';
 import { LiveLocationGateway } from './location/location.gateway';
+import { FriendRequestGateway } from './request/request.gateway';
+import { UsersModule } from 'src/users/users.module';
+import { NotificationGateway } from './notification/notification.gateway';
 
 @Module({
   imports:[
@@ -19,7 +22,8 @@ import { LiveLocationGateway } from './location/location.gateway';
     AwsModule,
     GroqModule,
     RedisModule,
+    UsersModule
   ],
-  providers: [SocketService, TextChatSocketGateway,SocketDbService, ImagechatGateway, ChatGateway, AiChatGateway, LiveLocationGateway]
+  providers: [SocketService, TextChatSocketGateway,SocketDbService, ImagechatGateway, ChatGateway, AiChatGateway, LiveLocationGateway, FriendRequestGateway, NotificationGateway]
 })
 export class SocketModule {}

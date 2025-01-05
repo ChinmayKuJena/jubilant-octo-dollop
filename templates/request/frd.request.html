@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Friend Request System</title>
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+
+    #container {
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .user-list, .requests {
+      margin-bottom: 20px;
+    }
+
+    .user {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 5px 10px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>Friend Request System</h1>
+    <div id="username-container">
+      <label for="username">Enter your username:</label>
+      <input type="text" id="username" />
+      <button onclick="connect()">Connect</button>
+    </div>
+
+    <div id="app" style="display: none;">
+      <h2>Online Users</h2>
+      <div id="user-list" class="user-list"></div>
+
+      <h2>Friend Requests</h2>
+      <div id="requests" class="requests"></div>
+    </div>
+  </div>
+
+  <script>
+    let socket;
+    const BASE_URL = 'http://localhost:2222/friends'; // Adjust as needed
+
+    function connect() {
+      const username = document.getElementById('username').value.trim();
+      if (!username) {
+        alert('Please enter a username.');
+        return;
+      }
+
+      socket = io(BASE_URL, { query: { username } });
+
+      socket.on('connect', () => {
+        document.getElementById('username-container').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        console.log('Connected as', username);
+      });
+
+      socket.on('active_users', (users) => {
+        updateUserList(users);
+      });
+
+      socket.on('friend_request_received', (data) => {
+        addFriendRequest(data.from);
+      });
+
+      socket.on('friend_request_response', (data) => {
+        alert(
+          `Friend request to ${data.to} was ${
+            data.accepted ? 'accepted' : 'rejected'
+          }.`
+        );
+      });
+    }
+
+    function updateUserList(users) {
+      const userList = document.getElementById('user-list');
+      userList.innerHTML = '';
+      users.forEach((user) => {
+        const div = document.createElement('div');
+        div.className = 'user';
+        div.innerHTML = `
+          <span>${user}</span>
+          <button onclick="sendFriendRequest('${user}')">Send Request</button>
+        `;
+        userList.appendChild(div);
+      });
+    }
+
+    function sendFriendRequest(to) {
+      socket.emit('send_friend_request', { to });
+      alert(`Friend request sent to ${to}`);
+    }
+
+    function addFriendRequest(from) {
+      const requests = document.getElementById('requests');
+      const div = document.createElement('div');
+      div.className = 'user';
+      div.innerHTML = `
+        <span>Request from ${from}</span>
+        <button onclick="respondRequest('${from}', true)">Accept</button>
+        <button onclick="respondRequest('${from}', false)">Reject</button>
+      `;
+      requests.appendChild(div);
+    }
+
+    function respondRequest(from, accepted) {
+      socket.emit('respond_friend_request', { from, accepted });
+      alert(
+        `You have ${accepted ? 'accepted' : 'rejected'} the request from ${from}`
+      );
+    }
+  </script>
+</body>
+</html>

@@ -38,10 +38,10 @@ import { BotModule } from './bot/bot.module';
         entities: [GroqEntity,SocketDataEntity,UserEntity],
         synchronize: false,
         logging: true,
-        // ssl: {
-        //   rejectUnauthorized: true,
-        //   ca: (configService.get<string>('DB_SSL_CERT_PATH')).toString(),
-        // },
+        ssl: {
+          rejectUnauthorized: true,
+          ca: (configService.get<string>('DB_SSL_CERT_PATH')).toString(),
+        },
       }),
     }),
     UiModule,

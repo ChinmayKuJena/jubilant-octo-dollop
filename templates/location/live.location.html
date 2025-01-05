@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Location on Map</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <!-- Removed the integrity attribute -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #map {
+      height: 500px;
+      margin-top: 20px;
+    }
+    #log {
+      margin-top: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+    .log-entry {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Live Location on Map</h1>
+  <form id="joinRoomForm">
+    <label for="roomId">Room ID:</label>
+    <input type="text" id="roomId" required>
+    <br><br>
+    <label for="userId">User ID:</label>
+    <input type="text" id="userId" required>
+    <br><br>
+    <button type="submit">Join Room</button>
+  </form>
+
+  <div id="locationSection" style="display: none;">
+    <button id="sendLocation">Send My Location</button>
+  </div>
+
+  <div id="map"></div>
+
+  <h2>Log</h2>
+  <div id="log"></div>
+
+  <script>
+    const socket = io('http://localhost:2222/live-location'); // Adjust URL as needed
+
+    const joinRoomForm = document.getElementById('joinRoomForm');
+    const locationSection = document.getElementById('locationSection');
+    const sendLocationButton = document.getElementById('sendLocation');
+    const logDiv = document.getElementById('log');
+    const map = L.map('map').setView([0, 0], 30); // Increased zoom level to 18 for closer view
+
+    const markers = new Map(); // To keep track of user markers
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 20,
+      attribution: '© OpenStreetMap contributors',
+    }).addTo(map);
+    console.log('map', map);
+    function logMessage(message) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.textContent = message;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight; // Auto-scroll to the latest log
+    }
+
+    // Join room event
+    joinRoomForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const roomId = document.getElementById('roomId').value;
+      const userId = document.getElementById('userId').value;
+
+      socket.emit('joinRoom', { roomId, userId });
+
+      locationSection.style.display = 'block';
+      logMessage(`Joined room: ${roomId} as user: ${userId}`);
+    });
+
+    // Handle sending location
+    sendLocationButton.addEventListener('click', () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            const roomId = document.getElementById('roomId').value;
+            const userId = document.getElementById('userId').value;
+
+            socket.emit('updateLocation', {
+              roomId,
+              userId,
+              location: { latitude, longitude },
+            });
+
+            logMessage(`Sent location: (${latitude}, ${longitude})`);
+          },
+          (error) => {
+            logMessage(`Error getting location: ${error.message}`);
+          },
+        );
+      } else {
+        logMessage('Geolocation is not supported by this browser.');
+      }
+    });
+
+    // Listen for location updates
+    socket.on('locationUpdate', (data) => {
+      const { userId, location } = data;
+      const { latitude, longitude } = location;
+
+      logMessage(
+        `Location update received: User ${userId} - (${latitude}, ${longitude})`,
+      );
+
+      // Update or add marker
+      if (markers.has(userId)) {
+        const marker = markers.get(userId);
+        marker.setLatLng([latitude, longitude]);
+      } else {
+        const marker = L.marker([latitude, longitude]).addTo(map);
+        marker.bindPopup(`User: ${userId}`).openPopup();
+        markers.set(userId, marker);
+      }
+
+      // Center map to the updated location with zoom level 18 (closer view)
+      map.setView([latitude, longitude], 30);
+    });
+
+    // Listen for join confirmation
+    socket.on('joinedRoom', (data) => {
+      logMessage(`Successfully joined room: ${data.roomId}`);
+    });
+
+    // Handle connection
+    socket.on('connect', () => {
+      logMessage('Connected to server.');
+    });
+
+    socket.on('disconnect', () => {
+      logMessage('Disconnected from server.');
+    });
+  </script>
+</body>
+</html>

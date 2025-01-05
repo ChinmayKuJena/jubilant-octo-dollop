@@ -13,7 +13,23 @@ export class UsersService {
     private emailService: EmailOtpService,
     // private jwtUtil: JwtUtil,
   ) {}
-
+  async validateUserCredentials(
+    username: string,
+    number: string,
+  ): Promise<UserEntity> {
+    const user = await this.userRepository.findOne({
+      where: { username, phone_number: number },
+    });
+    if (!user) {
+      throw new NotFoundException(
+        'User not found with the provided credentials.',
+      );
+    }
+    return user;
+  }
+  async getUser(username: string): Promise<UserEntity> {
+    return this.userRepository.findOne({ where: { username } });
+  }
   // Login with username and number, validate them, then send email
   async login(username: string, number: string): Promise<any> {
     const user = await this.userRepository.findOne({

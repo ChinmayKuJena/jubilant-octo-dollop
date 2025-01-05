@@ -1,4 +1,12 @@
-import { Controller, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpException,
+  HttpStatus,
+  Get,
+  Param,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AllowAnonymous } from 'src/auth/allowAll.metas';
 
@@ -6,6 +14,18 @@ import { AllowAnonymous } from 'src/auth/allowAll.metas';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get(':username')
+  @AllowAnonymous()
+  async getUser(@Param('username') username: string): Promise<any> {
+    try {
+      return await this.usersService.getUser(username);
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Internal Server Error',
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
   @Post('login')
   @AllowAnonymous()
   async login(

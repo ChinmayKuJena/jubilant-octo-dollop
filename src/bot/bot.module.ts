@@ -13,7 +13,7 @@ import { ConfigService } from '@nestjs/config';
     TelegrafModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        token: configService.get<string>('BOT_TOKEN'), // Get BOT_TOKEN from ConfigService
+        token: configService.get<string>('BOT_TOKEN'),
       }),
     }),
     GroqModule,

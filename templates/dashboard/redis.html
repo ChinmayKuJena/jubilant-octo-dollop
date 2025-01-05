@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redis Monitoring Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    .container {
+      margin-bottom: 20px;
+    }
+    .room-list, .message-list {
+      list-style-type: none;
+      padding: 0;
+    }
+    .room-list li, .message-list li {
+      margin: 5px 0;
+    }
+    .button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .button:hover {
+      background-color: #0056b3;
+    }
+    .data-box {
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Redis Monitoring Dashboard</h1>
+  <div class="container">
+    <h2>Active Rooms</h2>
+    <ul id="roomList" class="room-list"></ul>
+  </div>
+
+  <div class="container">
+    <h2>Room Details</h2>
+    <div id="roomDetails" class="data-box"></div>
+  </div>
+
+  <script>
+    const BASE_URL = 'http://localhost:2222';
+
+    // Fetch active rooms
+    async function fetchRooms() {
+      const response = await fetch(`${BASE_URL}/redis/rooms`);
+      const rooms = await response.json();
+
+      const roomList = document.getElementById('roomList');
+      roomList.innerHTML = '';
+      rooms.forEach(room => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          ${room}
+          <button class="button" onclick="fetchRoomDetails('${room}')">View Details</button>
+        `;
+        roomList.appendChild(li);
+      });
+    }
+
+    // Fetch room details
+    async function fetchRoomDetails(roomId) {
+      const messagesResponse = await fetch(`${BASE_URL}/redis/room/${roomId}/messages`);
+      const metadataResponse = await fetch(`${BASE_URL}/redis/room/${roomId}/metadata`);
+
+      const messages = await messagesResponse.json();
+      const metadata = await metadataResponse.json();
+
+      const roomDetails = document.getElementById('roomDetails');
+      roomDetails.innerHTML = `
+        <h3>Room: ${roomId}</h3>
+        <h4>Metadata</h4>
+        <pre>${JSON.stringify(metadata, null, 2)}</pre>
+        <h4>Messages</h4>
+        <ul class="message-list">
+          ${messages.map(msg => `<li><strong>${msg.userName}</strong>: ${msg.message} <small>(${msg.timestamp})</small></li>`).join('')}
+        </ul>
+      `;
+    }
+
+    // Initialize dashboard
+    fetchRooms();
+  </script>
+</body>
+</html>
